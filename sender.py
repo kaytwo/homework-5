@@ -5,7 +5,7 @@ Client that sends STDIN, over a simulated faulty network connection.
 
 import argparse
 import homework5.wire
-import time
+import hw5
 
 PARSER = argparse.ArgumentParser(description="Client script for sending data "
                                              "over a faulty network "
@@ -17,14 +17,8 @@ PARSER.add_argument("-f", "--file", required=True,
 ARGS = PARSER.parse_args()
 
 DATA = open(ARGS.file, 'rb').read()
-DATA_LEN = len(DATA)
-
-CHUNK_SIZE = homework5.MAX_PACKET
 SOC = homework5.wire.bad_socket(ARGS.port)
 
-CHUNK_OFFSETS = range(0, DATA_LEN, CHUNK_SIZE)
-for CHUNK in [DATA[i:i + CHUNK_SIZE] for i in CHUNK_OFFSETS]:
-    SOC.send(CHUNK)
-    time.sleep(.5)
+hw5.send(SOC, DATA)
 
 SOC.close()

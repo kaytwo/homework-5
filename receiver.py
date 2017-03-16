@@ -7,6 +7,7 @@ to STDOUT.
 import argparse
 import sys
 import homework5.wire
+import hw5
 
 PARSER = argparse.ArgumentParser(description="Client script for sending data "
                                              "over a faulty network "
@@ -22,12 +23,7 @@ OUTPUT = open(ARGS.file, 'wb') if ARGS.file else sys.stdout.buffer
 
 SOC = homework5.wire.bad_socket(ARGS.port)
 
-while True:
-    DATA = SOC.recv(homework5.MAX_PACKET)
-    if not DATA:
-        break
-    OUTPUT.write(DATA)
-    OUTPUT.flush()
+hw5.recv(SOC, OUTPUT)
 
 SOC.close()
 OUTPUT.close()

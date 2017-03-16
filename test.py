@@ -7,6 +7,8 @@ import subprocess
 import hashlib
 import pathlib
 import sys
+import os
+import tempfile
 import homework5.utils
 
 DESC = sys.modules[globals()['__name__']].__doc__
@@ -23,10 +25,12 @@ PARSER.add_argument('-b', '--buffer', type=int, default=100000,
                     help="The size of the buffer to simulate.")
 PARSER.add_argument('-v', '--verbose', action="store_true",
                     help="Enable extra verbose mode.")
-PARSER.add_argument('-s', '--send', required=True,
+PARSER.add_argument('-f', '--file', required=True,
                     help="The file to send over the wire.")
-PARSER.add_argument('-r', '--receive', required=True,
-                    help="The path to write the received file to.")
+PARSER.add_argument('-r', '--receive', default=None,
+                    help="The path to write the received file to.  If not "
+                         "provided, the results will be writen to a temp "
+                         "file.")
 ARGS = PARSER.parse_args()
 
 PYTHON_BINARY = sys.executable
@@ -39,28 +43,33 @@ for AN_ARG in ("port", "loss", "delay", "buffer"):
     SERVER_ARGS.append("--" + AN_ARG)
     SERVER_ARGS.append(str(getattr(ARGS, AN_ARG)))
 
-SUBPROCESS_KWARGS = {} # {"stdout": subprocess.PIPE, "stderr": subprocess.PIPE}
-print(SERVER_ARGS)
-SERVER_PROCESS = subprocess.Popen(SERVER_ARGS, **SUBPROCESS_KWARGS)
+SERVER_PROCESS = subprocess.Popen(SERVER_ARGS)
 print("Starting wire process: {}".format(SERVER_PROCESS.pid))
 time.sleep(1)
 
+if ARGS.receive:
+    DEST_FILE_PATH = ARGS.receive
+else:
+    TEMP_HANDLE, TEMP_FILE_NAME = tempfile.mkstemp()
+    DEST_FILE_PATH = TEMP_FILE_NAME
+    os.close(TEMP_HANDLE)
+
 RECEIVING_ARGS = [PYTHON_BINARY, "receiver.py",
                   "--port", str(ARGS.port),
-                  "--file", ARGS.receive]
-RECEIVING_PROCESS = subprocess.Popen(RECEIVING_ARGS, **SUBPROCESS_KWARGS)
+                  "--file", DEST_FILE_PATH]
+RECEIVING_PROCESS = subprocess.Popen(RECEIVING_ARGS)
 print("Starting receiving process: {}".format(RECEIVING_PROCESS.pid))
 time.sleep(1)
 
 SENDER_ARGS = [PYTHON_BINARY, "sender.py",
                "--port", str(ARGS.port),
-               "--file", ARGS.send]
-INPUT_PATH = pathlib.Path(ARGS.send)
+               "--file", ARGS.file]
+INPUT_PATH = pathlib.Path(ARGS.file)
 INPUT_LEN, INPUT_HASH = homework5.utils.file_summary(INPUT_PATH)
 START_TIME = time.time()
 
 print("Starting sending process: {}".format(SERVER_PROCESS.pid))
-SENDING_RESULT = subprocess.run(SENDER_ARGS, **SUBPROCESS_KWARGS)
+SENDING_RESULT = subprocess.run(SENDER_ARGS)
 
 END_TIME = time.time()
 
@@ -69,9 +78,10 @@ time.sleep(ARGS.delay)
 RECEIVING_PROCESS.terminate()
 SERVER_PROCESS.terminate()
 
-RECV_PATH = pathlib.Path(ARGS.receive)
+RECV_PATH = pathlib.Path(DEST_FILE_PATH)
 RECV_LEN, RECV_HASH = homework5.utils.file_summary(RECV_PATH)
 
+print("\n")
 if RECV_HASH == INPUT_HASH:
     print("Success")
 else:
@@ -88,5 +98,8 @@ print("---")
 print("File: {}\nLength: {}\nHash: {}".format(
     str(RECV_PATH), RECV_LEN, RECV_HASH))
 
+NUM_SECONDS = END_TIME - START_TIME
 print("\nStats")
-print("Time: {} secs\nRate: {}".format(END_TIME - START_TIME, "TBD"))
+print("---")
+print("Time: {} secs\nRate: {} B/s".format(round(NUM_SECONDS, 2),
+                                           round(RECV_LEN / NUM_SECONDS, 2)))
