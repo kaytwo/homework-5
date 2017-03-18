@@ -1,15 +1,16 @@
 """
 Where solution code to HW5 should be written.  No other files should
 be modified.
-
-You can import the following additional modules.  No other modules are allowed
-for this assignment.
 """
 
 import socket
 import io
 import time
+import typing
+import struct
 import homework5
+import homework5.logging
+
 
 def send(sock: socket.socket, data: bytes):
     """
@@ -26,11 +27,14 @@ def send(sock: socket.socket, data: bytes):
     # packets as large as the network will allow, and then send them
     # over the network, pausing half a second between sends to let the
     # network "rest" :)
+    logger = homework5.logging.get_logger("hw5-sender")
     chunk_size = homework5.MAX_PACKET
+    pause = .1
     offsets = range(0, len(data), homework5.MAX_PACKET)
     for chunk in [data[i:i + chunk_size] for i in offsets]:
         sock.send(chunk)
-        time.sleep(.1)
+        logger.info("Pausing for %f seconds", round(pause, 2))
+        time.sleep(pause)
 
 
 def recv(sock: socket.socket, dest: io.BufferedIOBase) -> int:
@@ -45,7 +49,7 @@ def recv(sock: socket.socket, dest: io.BufferedIOBase) -> int:
     Return:
         The number of bytes written to the destination.
     """
-
+    logger = homework5.logging.get_logger("hw5-receiver")
     # Naive solution, where we continually read data off the socket
     # until we don't receive any more data, and then return.
     num_bytes = 0
@@ -53,8 +57,8 @@ def recv(sock: socket.socket, dest: io.BufferedIOBase) -> int:
         data = sock.recv(homework5.MAX_PACKET)
         if not data:
             break
+        logger.info("Received %d bytes", len(data))
         dest.write(data)
         num_bytes += len(data)
         dest.flush()
     return num_bytes
-

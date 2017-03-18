@@ -27,7 +27,7 @@ PARSER.add_argument('-v', '--verbose', action="store_true",
 ARGS = PARSER.parse_args()
 
 if ARGS.verbose:
-    logging.getLogger('hw5').setLevel(logging.DEBUG)
+    logging.getLogger('hw5-wire').setLevel(logging.DEBUG)
 
 TRANSPORT, LOOP = homework5.wire.create_server(ARGS.port, ARGS.loss,
                                                ARGS.delay, ARGS.buffer)

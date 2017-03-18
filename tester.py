@@ -24,13 +24,14 @@ PARSER.add_argument('-l', '--loss', type=float, default=0.0,
 PARSER.add_argument('-d', '--delay', type=float, default=0.0,
                     help="The number of seconds, as a float, to wait before "
                          "forwarding a packet on.")
-PARSER.add_argument('-b', '--buffer', type=int, default=100000,
-                    help="The size of the buffer to simulate.")
+PARSER.add_argument('-b', '--buffer', type=int, default=2,
+                    help="The size of the buffer to simulate (defaults to "
+                         "2 packets).")
 PARSER.add_argument('-f', '--file', required=True,
                     help="The file to send over the wire.")
 PARSER.add_argument('-r', '--receive', default=None,
                     help="The path to write the received file to.  If not "
-                         "provided, the results will be writen to a temp "
+                         "provided, the results will be written to a temp "
                          "file.")
 PARSER.add_argument('-s', '--summary', action="store_true",
                     help="Print a one line summary of whether the "
@@ -40,7 +41,7 @@ PARSER.add_argument('-v', '--verbose', action="store_true",
                     help="Enable extra verbose mode.")
 ARGS = PARSER.parse_args()
 
-LOGGER = homework5.logging.get_logger()
+LOGGER = homework5.logging.get_logger("hw5-tester")
 if ARGS.verbose:
     LOGGER.setLevel(logging.DEBUG)
 
@@ -86,6 +87,10 @@ else:
 RECEIVING_ARGS = [PYTHON_BINARY, "receiver.py",
                   "--port", str(ARGS.port),
                   "--file", DEST_FILE_PATH]
+
+if ARGS.verbose:
+    RECEIVING_ARGS.append("-v")
+
 RECEIVING_PROCESS = subprocess.Popen(RECEIVING_ARGS)
 LOGGER.info("Starting receiving process: {}".format(RECEIVING_PROCESS.pid))
 time.sleep(1)
@@ -93,6 +98,10 @@ time.sleep(1)
 SENDER_ARGS = [PYTHON_BINARY, "sender.py",
                "--port", str(ARGS.port),
                "--file", ARGS.file]
+
+if ARGS.verbose:
+    SENDER_ARGS.append("-v")
+
 INPUT_PATH = pathlib.Path(ARGS.file)
 INPUT_LEN, INPUT_HASH = homework5.utils.file_summary(INPUT_PATH)
 START_TIME = time.time()
@@ -114,7 +123,7 @@ RECV_LEN, RECV_HASH = homework5.utils.file_summary(RECV_PATH)
 
 IS_SUCCESS = RECV_HASH == INPUT_HASH
 NUM_SECONDS = END_TIME - START_TIME
-RATE = RECV_LEN / NUM_SECONDS
+RATE = round(((RECV_LEN / NUM_SECONDS) / 1000), 2)
 TEMPLATE = "[{}] latency={}ms, packet loss={}%, buffer={}, throughput={} Kb/s"
 if ARGS.summary:
     SUMMARY = TEMPLATE.format(
@@ -122,7 +131,7 @@ if ARGS.summary:
         round(ARGS.delay * 1000),
         round(ARGS.loss * 100, 2),
         ARGS.buffer,
-        round(RATE / 1000, 2)
+        RATE
     )
     print(SUMMARY)
 else:
@@ -142,6 +151,5 @@ else:
 
     print("\nStats")
     print("---")
-    print("Time: {} secs\nRate: {} B/s".format(round(NUM_SECONDS, 2),
-                                               round(RATE, 2)))
+    print("Time: {} secs\nRate: {} kB/s".format(round(NUM_SECONDS, 2), RATE))
 sys.exit(0 if IS_SUCCESS else 1)

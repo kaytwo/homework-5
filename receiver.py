@@ -6,6 +6,7 @@ to STDOUT.
 
 import argparse
 import sys
+import logging
 import homework5.wire
 import hw5
 
@@ -17,7 +18,12 @@ PARSER.add_argument("-p", "--port", type=int, default=9999,
 PARSER.add_argument("-f", "--file", type=str,
                     help="The path to write the data recorded over the buffer "
                          "to (default=STDOUT).")
+PARSER.add_argument('-v', '--verbose', action="store_true",
+                    help="Enable extra verbose mode.")
 ARGS = PARSER.parse_args()
+
+if ARGS.verbose:
+    logging.getLogger('hw5-receiver').setLevel(logging.DEBUG)
 
 OUTPUT = open(ARGS.file, 'wb') if ARGS.file else sys.stdout.buffer
 
