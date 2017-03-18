@@ -1,7 +1,7 @@
 ---
 title: homework 5
 section: homeworks
-due: 3PM, March April 10th
+due: 3PM, April 10th
 ---
 
 
@@ -13,7 +13,7 @@ link, just like TCP.
 You will be provided with code that simulates an unreliable link between sender
 and receiver.  This link has a very constrained buffer (only two packets can
 be 'in flight' at a time), and can have arbitrary delay and loss rates.  Your
-job will be to create and implement a protocol over this connection that 
+job will be to create and implement a protocol over this connection that
 correctly transfers data, in a reasonable amount of time.
 
 
@@ -97,7 +97,7 @@ with a 5% loss rate, and with a latency of 100ms, you could use the following:
    a packet.  You should estimate this timeout value using the EWMA technique
    for estimating the RTT, and use this in determining your timeout. With
    correctly tuned timeouts, lower RTT will result in higher throughput.
-   
+
    A good way of determining the timeout to use is the "estimated RTT +
    (deviation  of RTT * 4)".  You should check with your book for more details.
 
@@ -109,7 +109,7 @@ with a 5% loss rate, and with a latency of 100ms, you could use the following:
    By default, the testing script will store the results of your code to a
    temporary location.  This option may be useful if you're not sure how or
    why the received file does not match the sent file.
-  
+
  * Make sure you try your solution under many different loss ratios and
    latencies by changing the parameters in the `tester.py` script.
 
@@ -124,7 +124,7 @@ with a 5% loss rate, and with a latency of 100ms, you could use the following:
 
 ### Grading
 
-You solution will be graded by using it to transfer six different files, 
+You solution will be graded by using it to transfer six different files,
 each under different simulated test conditions.  For each test case, there is a
 minimum throughput requirement and a timeout for your program to exit.
 The timeout is set as 50% more than the corresponding required throughput.
