@@ -33,7 +33,7 @@ class CrummyWireProtocol(asyncio.DatagramProtocol):
         self._loss = loss
         self._delay = delay
         self._buffer_size = buffer_size
-        self._wirebuffer = set()
+        self._wirebuffer = []
         self._peer_addrs = set()
         self._transport = None
         self._logger = homework5.logging.get_logger("hw5-wire")
@@ -65,7 +65,7 @@ class CrummyWireProtocol(asyncio.DatagramProtocol):
                            len(data), self._delay)
 
         # And now, schedule the data to actually be sent in the future.
-        self._wirebuffer.add(data)
+        self._wirebuffer.append(data)
         self._loop.call_later(self._delay, self.send_to_peer_addrs, (data, addr))
 
     def send_to_peer_addrs(self, package):
