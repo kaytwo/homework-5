@@ -28,11 +28,11 @@ def send(sock: socket.socket, data: bytes):
     # over the network, pausing half a second between sends to let the
     # network "rest" :)
     logger = homework5.logging.get_logger("hw5-sender")
-    chunk_size = homework5.MAX_PACKET
+    chunk_size = homework5.MAX_PACKET - 5
     pause = .1
     offsets = range(0, len(data), homework5.MAX_PACKET)
     for chunk in [data[i:i + chunk_size] for i in offsets]:
-        sock.send(chunk)
+        sock.send(b'00000' + chunk)
         logger.info("Pausing for %f seconds", round(pause, 2))
         time.sleep(pause)
 
